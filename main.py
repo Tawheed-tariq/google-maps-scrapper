@@ -54,7 +54,7 @@ def main():
 
         business_list = BusinessList()
 
-        for listing in listings:
+        for listing in listings[:5]:
             listing.click()
             page.wait_for_timeout(5000)
 
@@ -63,15 +63,17 @@ def main():
             website_xpath = '//a[@data-item-id="authority"]//div[contains(@class, "fontBodyMedium")]'
             phone_number_xpath = '//button[contains(@data-item-id, "phone:tel:")]//div[contains(@class, "fontBodyMedium")]'
 
+            try:
+                business = Business()
+                business.name = page.locator(".lfPIob").inner_text()
+                business.address = page.locator(address_xpath).inner_text()
+                business.website = page.locator(website_xpath).inner_text()
+                business.phoneNumber = page.locator(phone_number_xpath).inner_text()
 
-            business = Business()
-            business.name = page.locator(".lfPIob").inner_text()
-            business.address = page.locator(address_xpath).inner_text()
-            business.website = page.locator(website_xpath).inner_text()
-            business.phoneNumber = page.locator(phone_number_xpath).inner_text()
-
-            business_list.business_list.append(business)
-            print(business_list.business_list)
+                business_list.business_list.append(business)
+                print(business_list.business_list)
+            except:
+                print("cannot get full info")
 
         business_list.save_to_csv('google_maps_data')
         business_list.save_to_excel('google_maps_data')

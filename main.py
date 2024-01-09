@@ -14,7 +14,7 @@ import argparse #cli tool
 
 # we are using chromium as our automating browser `playwright install chromium`
 
-@dataclass
+@dataclass #Dataclasses are python classes, but are suited for storing data objects
 class Business:
     name: str = None
     address: str = None
@@ -27,6 +27,10 @@ class BusinessList:
 
     def dataframe(self):
         return pd.json_normalize((asdict(business) for business in self.business_list), sep="_")
+
+        """pandas.json_normalize(data, record_path=None, meta=None, meta_prefix=None, 
+        record_prefix=None, errors='raise', sep='.', max_level=None)"""
+        # Normalize semi-structured JSON data into a flat table.
     
     def save_to_excel(self, filename):
         self.dataframe().to_excel(f'{filename}.xlsx', index=False)
@@ -58,7 +62,7 @@ def main():
             listing.click()
             page.wait_for_timeout(5000)
 
-            name_xpath = '//h1[contains(@class, "fontHeadlineSmall")]'
+            # name_xpath = '//h1[contains(@class, "fontHeadlineSmall")]'
             address_xpath = '//button[@data-item-id="address"]//div[contains(@class, "fontBodyMedium")]'
             website_xpath = '//a[@data-item-id="authority"]//div[contains(@class, "fontBodyMedium")]'
             phone_number_xpath = '//button[contains(@data-item-id, "phone:tel:")]//div[contains(@class, "fontBodyMedium")]'
@@ -71,7 +75,7 @@ def main():
                 business.phoneNumber = page.locator(phone_number_xpath).inner_text()
 
                 business_list.business_list.append(business)
-                print(business_list.business_list)
+                # print(business_list.business_list)
             except:
                 print("cannot get full info")
 
@@ -88,7 +92,7 @@ if __name__ == "__main__":
     if args.location and args.search:
         search_for = f'{args.search} {args.location}'
     else:
-        search_for = 'dentist srinagar'
+        search_for = 'colleges srinagar'
     
     main()
 

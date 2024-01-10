@@ -3,7 +3,7 @@ To install all requirements use `pip3 install -r requirements.txt`
 
 Here in this project we will be working with google maps 
 scraping 
-name , phone number, address, website of the given search and location
+name , phone number, address, website, review count and review average of the given search and location
 """
 
 import pandas as pd
@@ -41,6 +41,31 @@ class BusinessList:
         self.dataframe().to_csv(f'{filename}.csv', index=False)
 
 
+def getReviews(component , path):
+    if component.locator(path).count() > 0:
+        reviewAvg = float(
+            component.locator(path)
+            .get_attribute("aria-label")
+            .split()[0]
+            .replace(",", ".")
+            .strip()
+        )
+        # strip() method used to remove extra whitespaces and specified characters 
+        # from the start and from the end of the strip irrespective of 
+        # how the parameter is passed.
+        reviewCount = int(
+            component.locator(path)
+            .get_attribute("aria-label")
+            .split()[2]
+            .replace(',','')
+            .strip()
+        )                
+    else:
+        reviewAvg = ""
+        reviewCount = ""
+    return [reviewAvg, reviewCount]
+
+
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
@@ -60,8 +85,8 @@ def main():
         while True:
             page.mouse.wheel(0, 10000)
             page.wait_for_timeout(3000)
-            if page.locator('//a[contains(@href, "https://www.google.com/maps/place")]').count() >= total:
-                listings = page.locator('//a[contains(@href, "https://www.google.com/maps/place")]').all()[:total]
+            if page.locator('//div[@class="Nv2PK tH5CWc THOPZb "]').count() >= total:
+                listings = page.locator('//div[@class="Nv2PK tH5CWc THOPZb "]').all()[:total]
                 print(f'Total scrapped {len(listings)}')
                 break
             else:
@@ -71,16 +96,26 @@ def main():
         business_list = BusinessList()
 
         for listing in listings[:total]:
-            listing.click()
-            page.wait_for_timeout(5000)
 
-            name_xpath = '//h1[contains(@class, "DUwDvf lfPIob")]'
-            address_xpath = '//button[@data-item-id="address"]//div[contains(@class, "fontBodyMedium")]'
-            website_xpath = '//a[@data-item-id="authority"]//div[contains(@class, "fontBodyMedium")]'
-            phone_number_xpath = '//button[contains(@data-item-id, "phone:tel:")]//div[contains(@class, "fontBodyMedium")]'
-            reviews_xpath = '//span[@role="img"]'
             try:
+
+                name_xpath = '//h1[contains(@class, "DUwDvf lfPIob")]'
+                address_xpath = '//button[@data-item-id="address"]//div[contains(@class, "fontBodyMedium")]'
+                website_xpath = '//a[@data-item-id="authority"]//div[contains(@class, "fontBodyMedium")]'
+                phone_number_xpath = '//button[contains(@data-item-id, "phone:tel:")]//div[contains(@class, "fontBodyMedium")]'
+                reviews_xpath = '//span[@role="img"]'
+
                 business = Business()
+                reviews = getReviews(listing, reviews_xpath)
+                business.reviews_average = reviews[0]
+                business.reviews_count = reviews[1]
+                #first scrape the reviews and then click on element and 
+                # get the other info otherwise gives wrong reviews
+
+
+                listing.click()
+                page.wait_for_timeout(5000)
+
 
                 if page.locator(name_xpath).count() > 0:
                     business.name = page.locator(name_xpath).inner_text()
@@ -102,28 +137,9 @@ def main():
                 else:
                     business.phoneNumber = ''
 
-                if page.locator(reviews_xpath).count() > 0:
-                    business.reviews_average = float(
-                        page.locator(reviews_xpath).all()[0]
-                        .get_attribute("aria-label")
-                        .split()[0]
-                        .replace(",", ".")
-                        .strip()
-                    )
-# strip() method used to remove extra whitespaces and specified characters 
-# from the start and from the end of the strip irrespective of how the parameter is passed.
-                    business.reviews_count = int(
-                        page.locator(reviews_xpath).all()[0]
-                        .get_attribute("aria-label")
-                        .split()[2]
-                        .replace(',','')
-                        .strip()
-                    )
-                else:
-                    business.reviews_average = ""
-                    business.reviews_count = ""
                 
                 business_list.business_list.append(business)
+                print(business)
             except:
                 print("cannot get full info")
                 

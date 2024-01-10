@@ -5,5 +5,5 @@ pip install -r reequirements.txt
 
 to run the python file use
 ```
-python3 main.py -l=<location> -s=<search>
+python3 main.py -s=<search> -l=<location>(optional) -t=<search_counts>(optional)
 ```

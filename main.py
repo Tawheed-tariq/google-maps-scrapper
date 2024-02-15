@@ -68,6 +68,7 @@ def getReviews(component , path):
 
 def main():
     with sync_playwright() as p:
+        # open browser and search for the location
         browser = p.chromium.launch(headless=False)
         page = browser.new_page()
 
@@ -82,6 +83,8 @@ def main():
 
         page.hover('(//a[contains(@href, "https://www.google.com/maps/place")])[1]')
 
+
+        #scroll down
         while True:
             page.mouse.wheel(0, 10000)
             page.wait_for_timeout(3000)
